@@ -1,18 +1,16 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
+from app.api.dependencies import require_role
+from app.db.models.user import User, UserRole
 from app.db.session import get_db
 from app.schemas.product import (
-    ProductCreate,
-    ProductUpdate,
-    ProductResponse,
     CategoryCreate,
     CategoryResponse,
-    PaginatedProductsResponse,
+    ProductCreate,
+    ProductResponse,
+    ProductUpdate,
 )
 from app.services.product_service import product_service
-from app.api.dependencies import require_role
-from app.db.models.user import UserRole, User
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -24,7 +22,7 @@ def create_category(
 ):
     return product_service.create_category(db, cat_in)
 
-@router.get("/categories", response_model=List[CategoryResponse])
+@router.get("/categories", response_model=list[CategoryResponse])
 def list_categories(db: Session = Depends(get_db)):
     return product_service.list_categories(db)
 
@@ -64,4 +62,3 @@ def delete_product(
     admin: User = Depends(require_role([UserRole.ADMIN]))
 ):
     product_service.delete_product(db, product_id)
-    return None

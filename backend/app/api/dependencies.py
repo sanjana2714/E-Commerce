@@ -1,25 +1,27 @@
-from typing import Generator, Optional
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.db.models.user import User, UserRole
+from app.core.exceptions import ForbiddenError, UnauthorizedError
+from app.core.rate_limiter import RateLimitExceededError, rate_limiter
 from app.core.security import decode_access_token
-from app.core.exceptions import UnauthorizedError, ForbiddenError
-from app.core.rate_limiter import rate_limiter, RateLimitExceededError
+from app.db.models.user import User, UserRole
+from app.db.session import get_db
+from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
 security = HTTPBearer(auto_error=False)
 
 def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
     if not credentials:
         raise UnauthorizedError("Authentication token required.")
     try:
         payload = decode_access_token(credentials.credentials)
-        user_id = int(payload.get("sub"))
-    except Exception:
+        sub = payload.get("sub")
+        if sub is None:
+            raise UnauthorizedError("Invalid or expired authentication token.")
+        user_id = int(sub)
+    except Exception:  # noqa: BLE001
         raise UnauthorizedError("Invalid or expired authentication token.")
 
     user = db.query(User).filter(User.id == user_id).first()

@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict
+
 from app.db.models.payment import PaymentStatus
+from pydantic import BaseModel, ConfigDict
+
 
 class PaymentResponse(BaseModel):
     id: int
@@ -9,7 +10,7 @@ class PaymentResponse(BaseModel):
     order_id: int
     amount: float
     status: PaymentStatus
-    transaction_reference: Optional[str] = None
+    transaction_reference: str | None = None
     created_at: datetime
     updated_at: datetime
 

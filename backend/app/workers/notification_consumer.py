@@ -1,13 +1,16 @@
 import json
 import time
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from kafka import KafkaConsumer
+
 from app.core.config import settings
+from app.core.logging import logger
 from app.db.models.idempotency import ProcessedEvent
 from app.db.models.notification import Notification
 from app.events.types import KafkaTopic
-from app.core.logging import logger
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
@@ -24,7 +27,7 @@ def start_notification_consumer():
             value_deserializer=lambda x: json.loads(x.decode("utf-8")),
             consumer_timeout_ms=1000,
         )
-    except Exception as e:
+    except KafkaError as e:
         logger.warning(f"Notification consumer connection failed: {e}")
         return
 
@@ -60,12 +63,12 @@ def start_notification_consumer():
                     db.add(processed_record)
                     db.commit()
                     logger.info(f"Notification record created for event {event_id}.")
-                except Exception as ex:
+                except SQLAlchemyError as ex:
                     db.rollback()
                     logger.error(f"Error in Notification Consumer: {ex}")
                 finally:
                     db.close()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             logger.warning(f"Notification consumer loop exception: {err}")
         time.sleep(2)
 

@@ -1,8 +1,10 @@
 import uuid
-from typing import Dict, Any, Optional
-from sqlalchemy.orm import Session
+from typing import Any
+
 from app.db.models.outbox import OutboxEvent, OutboxStatus
 from app.schemas.events import BaseEventPayload
+from sqlalchemy.orm import Session
+
 
 class OutboxService:
     def create_outbox_event(
@@ -11,8 +13,8 @@ class OutboxService:
         aggregate_type: str,
         aggregate_id: str,
         event_type: str,
-        payload: Dict[str, Any],
-        correlation_id: Optional[str] = None
+        payload: dict[str, Any],
+        correlation_id: str | None = None
     ) -> OutboxEvent:
         event_id = str(uuid.uuid4())
         event_envelope = BaseEventPayload(

@@ -1,12 +1,14 @@
-from typing import List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from app.db.models.order import OrderItem, OrderStatus
-from app.db.models.product import Product
+from typing import Any
+
 from app.algorithms.top_k import TopKHeap
+from app.db.models.order import OrderItem
+from app.db.models.product import Product
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 
 class AnalyticsService:
-    def get_top_k_products(self, db: Session, k: int = 10) -> List[Dict[str, Any]]:
+    def get_top_k_products(self, db: Session, k: int = 10) -> list[dict[str, Any]]:
         # Query total quantity sold per product across non-failed orders
         results = (
             db.query(

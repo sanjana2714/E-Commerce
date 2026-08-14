@@ -1,10 +1,11 @@
-from sqlalchemy.orm import Session
-from app.db.models.payment import Payment, PaymentStatus
-from app.db.models.order import Order, OrderStatus
 from app.core.exceptions import ResourceNotFoundError
-from app.services.outbox_service import outbox_service
-from app.events.types import EventType
 from app.core.logging import logger
+from app.db.models.order import Order, OrderStatus
+from app.db.models.payment import Payment, PaymentStatus
+from app.events.types import EventType
+from app.services.outbox_service import outbox_service
+from sqlalchemy.orm import Session
+
 
 class PaymentService:
     def process_simulated_payment(self, db: Session, order_id: int, simulate_failure: bool = False) -> Payment:

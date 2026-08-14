@@ -1,8 +1,9 @@
-from sqlalchemy.orm import Session
+from app.core.exceptions import DuplicateRequestError, UnauthorizedError
+from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User, UserRole
-from app.schemas.auth import UserRegister, UserLogin, Token
-from app.core.security import hash_password, verify_password, create_access_token
-from app.core.exceptions import UnauthorizedError, DuplicateRequestError
+from app.schemas.auth import Token, UserLogin, UserRegister
+from sqlalchemy.orm import Session
+
 
 class AuthService:
     def register_user(self, db: Session, user_in: UserRegister) -> User:

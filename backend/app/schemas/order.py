@@ -1,15 +1,16 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+
 from app.db.models.order import OrderStatus
 from app.schemas.product import ProductResponse
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class OrderCreateItem(BaseModel):
     product_id: int
     quantity: int = Field(gt=0)
 
 class OrderCreate(BaseModel):
-    items: List[OrderCreateItem]
+    items: list[OrderCreateItem]
 
 class OrderItemResponse(BaseModel):
     id: int
@@ -17,7 +18,7 @@ class OrderItemResponse(BaseModel):
     quantity: int
     unit_price: float
     subtotal: float
-    product: Optional[ProductResponse] = None
+    product: ProductResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,7 +31,7 @@ class OrderResponse(BaseModel):
     currency: str
     created_at: datetime
     updated_at: datetime
-    items: List[OrderItemResponse]
+    items: list[OrderItemResponse]
 
     model_config = ConfigDict(from_attributes=True)
 

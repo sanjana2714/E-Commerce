@@ -1,10 +1,11 @@
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+from typing import Any
+
+from app.core.exceptions import ResourceNotFoundError
 from app.db.models.cart import Cart, CartItem
 from app.db.models.product import Product
 from app.schemas.cart import CartItemAdd, CartItemUpdate
-from app.core.exceptions import ResourceNotFoundError
-from app.cache.redis_client import cache_service
+from sqlalchemy.orm import Session
+
 
 class CartService:
     def get_or_create_cart(self, db: Session, user_id: int) -> Cart:
@@ -16,7 +17,7 @@ class CartService:
             db.refresh(cart)
         return cart
 
-    def get_cart_details(self, db: Session, user_id: int) -> Dict[str, Any]:
+    def get_cart_details(self, db: Session, user_id: int) -> dict[str, Any]:
         cart = self.get_or_create_cart(db, user_id)
         total_amount = 0.0
         items_data = []

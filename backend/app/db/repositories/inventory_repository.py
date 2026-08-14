@@ -1,9 +1,10 @@
-from typing import Optional
-from sqlalchemy.orm import Session
+
 from app.db.models.inventory import Inventory
+from sqlalchemy.orm import Session
+
 
 class InventoryRepository:
-    def get_by_product_id(self, db: Session, product_id: int, lock: bool = False) -> Optional[Inventory]:
+    def get_by_product_id(self, db: Session, product_id: int, lock: bool = False) -> Inventory | None:
         query = db.query(Inventory).filter(Inventory.product_id == product_id)
         if lock and db.bind and db.bind.dialect.name != "sqlite":
             query = query.with_for_update()

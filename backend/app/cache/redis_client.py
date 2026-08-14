@@ -1,12 +1,14 @@
 import json
-from typing import Any, Optional
+from typing import Any
+
 import redis.asyncio as aioredis
 from app.core.config import settings
 from app.core.logging import logger
 
+
 class RedisClient:
     def __init__(self):
-        self.redis: Optional[aioredis.Redis] = None
+        self.redis: aioredis.Redis | None = None
 
     async def connect(self):
         try:
@@ -18,7 +20,7 @@ class RedisClient:
             )
             await self.redis.ping()
             logger.info("Connected to Redis server successfully.")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Redis connection failed: {e}. Falling back to non-cached execution.")
             self.redis = None
 
@@ -26,12 +28,15 @@ class RedisClient:
         if self.redis:
             await self.redis.close()
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> str | None:
         if not self.redis:
             return None
         try:
-            return await self.redis.get(key)
-        except Exception as e:
+            val = await self.redis.get(key)
+            if isinstance(val, bytes):
+                return val.decode("utf-8")
+            return val
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Redis GET failed for key {key}: {e}")
             return None
 
@@ -40,7 +45,7 @@ class RedisClient:
             return
         try:
             await self.redis.set(key, value, ex=ttl_seconds)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Redis SET failed for key {key}: {e}")
 
     async def delete(self, key: str):
@@ -48,7 +53,7 @@ class RedisClient:
             return
         try:
             await self.redis.delete(key)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Redis DELETE failed for key {key}: {e}")
 
 redis_client = RedisClient()
@@ -57,12 +62,12 @@ class CacheService:
     def __init__(self, client: RedisClient = redis_client):
         self.client = client
 
-    async def get_json(self, key: str) -> Optional[Any]:
+    async def get_json(self, key: str) -> Any | None:
         val = await self.client.get(key)
         if val:
             try:
                 return json.loads(val)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return None
         return None
 
@@ -70,7 +75,7 @@ class CacheService:
         try:
             serialized = json.dumps(value)
             await self.client.set(key, serialized, ttl_seconds)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Failed to serialize cache value for key {key}: {e}")
 
     async def invalidate(self, key: str):

@@ -1,13 +1,16 @@
 import json
 import time
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from kafka import KafkaConsumer
+
 from app.core.config import settings
-from app.db.models.idempotency import ProcessedEvent
-from app.search.opensearch_client import opensearch_manager
-from app.events.types import KafkaTopic, EventType
 from app.core.logging import logger
+from app.db.models.idempotency import ProcessedEvent
+from app.events.types import EventType, KafkaTopic
+from app.search.opensearch_client import opensearch_manager
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
@@ -25,7 +28,7 @@ def start_search_consumer():
             value_deserializer=lambda x: json.loads(x.decode("utf-8")),
             consumer_timeout_ms=1000,
         )
-    except Exception as e:
+    except KafkaError as e:
         logger.warning(f"Kafka consumer connection failed: {e}. Running in polling mode.")
         return
 
@@ -59,12 +62,12 @@ def start_search_consumer():
                     processed_record = ProcessedEvent(event_id=event_id, consumer_name="search_consumer")
                     db.add(processed_record)
                     db.commit()
-                except Exception as ex:
+                except SQLAlchemyError as ex:
                     db.rollback()
                     logger.error(f"Error processing event {event_id} in Search Consumer: {ex}")
                 finally:
                     db.close()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             logger.warning(f"Consumer loop iteration error: {err}")
         time.sleep(2)
 

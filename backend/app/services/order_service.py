@@ -1,21 +1,20 @@
 import uuid
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
-from app.db.models.order import Order, OrderItem, OrderStatus
-from app.db.models.product import Product
-from app.db.models.payment import Payment, PaymentStatus
-from app.db.models.idempotency import IdempotencyKeyRecord
-from app.schemas.order import OrderCreate
+
 from app.core.exceptions import (
-    ResourceNotFoundError,
-    InsufficientInventoryError,
-    DuplicateRequestError,
     DomainException,
+    ResourceNotFoundError,
 )
+from app.core.logging import logger
+from app.db.models.idempotency import IdempotencyKeyRecord
+from app.db.models.order import Order, OrderItem, OrderStatus
+from app.db.models.payment import Payment, PaymentStatus
+from app.db.models.product import Product
+from app.events.types import EventType
+from app.schemas.order import OrderCreate
 from app.services.inventory_service import inventory_service
 from app.services.outbox_service import outbox_service
-from app.events.types import EventType
-from app.core.logging import logger
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 
 VALID_STATE_TRANSITIONS = {
     OrderStatus.PENDING: {OrderStatus.CONFIRMED, OrderStatus.FAILED, OrderStatus.CANCELLED},
@@ -141,17 +140,22 @@ class OrderService:
             db.refresh(order)
             return order
 
-        except Exception as e:
+        except IntegrityError as e:
             db.rollback()
-            from sqlalchemy.exc import IntegrityError
-            # Check if this is a duplicate key constraint violation on idempotency_keys
-            if isinstance(e, IntegrityError):
-                logger.info(f"Duplicate order request race condition intercepted via IntegrityError for key: {idempotency_key}")
-                existing_order = db.query(Order).filter(Order.idempotency_key == idempotency_key).first()
-                if existing_order:
-                    return existing_order
-            logger.error(f"Order creation failed, transaction rolled back: {e}")
-            raise e
+            logger.info(f"Duplicate order request race condition intercepted via IntegrityError for key: {idempotency_key}")
+            existing_order = db.query(Order).filter(Order.idempotency_key == idempotency_key).first()
+            if existing_order:
+                return existing_order
+            logger.error(f"Order creation failed due to integrity error: {e}")
+            raise
+        except SQLAlchemyError as e:
+            db.rollback()
+            logger.error(f"Order creation failed, database transaction rolled back: {e}")
+            raise
+        except Exception:
+            db.rollback()
+            logger.error("Order creation failed due to unexpected error, transaction rolled back.")
+            raise
 
     def transition_order_status(self, db: Session, order_id: int, target_status: OrderStatus) -> Order:
         order = db.query(Order).filter(Order.id == order_id).first()
@@ -186,7 +190,7 @@ class OrderService:
         db.refresh(order)
         return order
 
-    def get_order(self, db: Session, order_id: int, user_id: Optional[int] = None) -> Order:
+    def get_order(self, db: Session, order_id: int, user_id: int | None = None) -> Order:
         query = db.query(Order).filter(Order.id == order_id)
         if user_id:
             query = query.filter(Order.user_id == user_id)
@@ -195,7 +199,7 @@ class OrderService:
             raise ResourceNotFoundError(f"Order ID {order_id} not found.")
         return order
 
-    def list_orders_for_user(self, db: Session, user_id: int) -> List[Order]:
+    def list_orders_for_user(self, db: Session, user_id: int) -> list[Order]:
         return db.query(Order).filter(Order.user_id == user_id).order_by(Order.created_at.desc()).all()
 
 order_service = OrderService()

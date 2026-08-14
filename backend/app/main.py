@@ -1,27 +1,26 @@
 from contextlib import asynccontextmanager
+
+from app.api.dependencies import check_rate_limit
+from app.api.routers import (
+    admin,
+    analytics,
+    auth,
+    cart,
+    health,
+    orders,
+    payments,
+    products,
+    search,
+)
+from app.cache.redis_client import redis_client
+from app.core.exceptions import DomainException
+from app.core.logging import logger, setup_logging
+from app.events.publisher import kafka_publisher
+from app.search.index_manager import initialize_search_indexes
+from app.search.opensearch_client import opensearch_manager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.core.config import settings
-from app.core.logging import setup_logging, logger
-from app.core.exceptions import DomainException
-from app.api.dependencies import check_rate_limit
-from app.cache.redis_client import redis_client
-from app.search.opensearch_client import opensearch_manager
-from app.events.publisher import kafka_publisher
-from app.search.index_manager import initialize_search_indexes
-
-from app.api.routers import (
-    auth,
-    products,
-    search,
-    cart,
-    orders,
-    payments,
-    admin,
-    analytics,
-    health,
-)
 
 setup_logging()
 

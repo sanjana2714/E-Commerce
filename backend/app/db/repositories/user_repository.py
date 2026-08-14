@@ -1,12 +1,13 @@
-from typing import Optional
-from sqlalchemy.orm import Session
+
 from app.db.models.user import User
+from sqlalchemy.orm import Session
+
 
 class UserRepository:
-    def get_by_id(self, db: Session, user_id: int) -> Optional[User]:
+    def get_by_id(self, db: Session, user_id: int) -> User | None:
         return db.query(User).filter(User.id == user_id).first()
 
-    def get_by_email(self, db: Session, email: str) -> Optional[User]:
+    def get_by_email(self, db: Session, email: str) -> User | None:
         return db.query(User).filter(User.email == email).first()
 
     def create(self, db: Session, user: User) -> User:

@@ -1,13 +1,11 @@
-from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
-from app.db.models.product import Product, Category, ProductStatus
+from app.core.exceptions import DuplicateRequestError, ResourceNotFoundError
 from app.db.models.inventory import Inventory
-from app.schemas.product import ProductCreate, ProductUpdate, CategoryCreate
-from app.core.exceptions import ResourceNotFoundError, DuplicateRequestError
-from app.services.outbox_service import outbox_service
+from app.db.models.product import Category, Product, ProductStatus
 from app.events.types import EventType
-from app.cache.redis_client import cache_service
-from app.search.opensearch_client import opensearch_manager
+from app.schemas.product import CategoryCreate, ProductCreate, ProductUpdate
+from app.services.outbox_service import outbox_service
+from sqlalchemy.orm import Session
+
 
 class ProductService:
     def create_category(self, db: Session, cat_in: CategoryCreate) -> Category:
@@ -21,7 +19,7 @@ class ProductService:
         db.refresh(category)
         return category
 
-    def list_categories(self, db: Session) -> List[Category]:
+    def list_categories(self, db: Session) -> list[Category]:
         return db.query(Category).all()
 
     def create_product(self, db: Session, prod_in: ProductCreate) -> Product:

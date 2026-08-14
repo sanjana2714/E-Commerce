@@ -1,5 +1,6 @@
-from app.search.opensearch_client import opensearch_manager
 from app.core.logging import logger
+from app.search.opensearch_client import opensearch_manager
+
 
 def initialize_search_indexes():
     """Idempotently ensure OpenSearch index exists with correct schema."""

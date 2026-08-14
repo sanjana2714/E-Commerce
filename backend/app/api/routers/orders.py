@@ -1,19 +1,19 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Header, status
-from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_current_user, require_role
+from app.core.exceptions import ValidationError
+from app.db.models.user import User, UserRole
 from app.db.session import get_db
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.services.order_service import order_service
-from app.api.dependencies import get_current_user, require_role
-from app.db.models.user import User, UserRole
-from app.core.exceptions import ValidationError
+from fastapi import APIRouter, Depends, Header, status
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_order(
     order_in: OrderCreate,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -27,7 +27,7 @@ def create_order(
         order_in=order_in
     )
 
-@router.get("", response_model=List[OrderResponse])
+@router.get("", response_model=list[OrderResponse])
 def list_orders(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return order_service.list_orders_for_user(db, current_user.id)
 

@@ -1,6 +1,7 @@
-from typing import List, Optional
-from sqlalchemy.orm import Session
+
 from app.db.models.outbox import OutboxEvent, OutboxStatus
+from sqlalchemy.orm import Session
+
 
 class OutboxRepository:
     def create(self, db: Session, event: OutboxEvent) -> OutboxEvent:
@@ -8,7 +9,7 @@ class OutboxRepository:
         db.flush()
         return event
 
-    def get_pending_events(self, db: Session, limit: int = 50) -> List[OutboxEvent]:
+    def get_pending_events(self, db: Session, limit: int = 50) -> list[OutboxEvent]:
         return (
             db.query(OutboxEvent)
             .filter(OutboxEvent.status == OutboxStatus.PENDING)
@@ -17,14 +18,14 @@ class OutboxRepository:
             .all()
         )
 
-    def mark_published(self, db: Session, event_id: int) -> Optional[OutboxEvent]:
+    def mark_published(self, db: Session, event_id: int) -> OutboxEvent | None:
         event = db.query(OutboxEvent).filter(OutboxEvent.id == event_id).first()
         if event:
             event.status = OutboxStatus.PUBLISHED
             db.commit()
         return event
 
-    def mark_failed(self, db: Session, event_id: int) -> Optional[OutboxEvent]:
+    def mark_failed(self, db: Session, event_id: int) -> OutboxEvent | None:
         event = db.query(OutboxEvent).filter(OutboxEvent.id == event_id).first()
         if event:
             event.retry_count += 1

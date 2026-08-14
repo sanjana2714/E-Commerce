@@ -1,24 +1,25 @@
-from typing import List, Optional
+
+from app.db.models.product import Category, Product, ProductStatus
 from sqlalchemy.orm import Session
-from app.db.models.product import Product, Category, ProductStatus
+
 
 class ProductRepository:
-    def get_by_id(self, db: Session, product_id: int) -> Optional[Product]:
+    def get_by_id(self, db: Session, product_id: int) -> Product | None:
         return db.query(Product).filter(Product.id == product_id).first()
 
-    def get_by_sku(self, db: Session, sku: str) -> Optional[Product]:
+    def get_by_sku(self, db: Session, sku: str) -> Product | None:
         return db.query(Product).filter(Product.sku == sku).first()
 
     def list_products(
         self,
         db: Session,
-        category_id: Optional[int] = None,
-        brand: Optional[str] = None,
-        min_price: Optional[float] = None,
-        max_price: Optional[float] = None,
+        category_id: int | None = None,
+        brand: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
         skip: int = 0,
         limit: int = 50
-    ) -> List[Product]:
+    ) -> list[Product]:
         query = db.query(Product).filter(Product.status == ProductStatus.ACTIVE)
         if category_id:
             query = query.filter(Product.category_id == category_id)
@@ -36,10 +37,10 @@ class ProductRepository:
         db.refresh(product)
         return product
 
-    def get_category_by_id(self, db: Session, category_id: int) -> Optional[Category]:
+    def get_category_by_id(self, db: Session, category_id: int) -> Category | None:
         return db.query(Category).filter(Category.id == category_id).first()
 
-    def list_categories(self, db: Session) -> List[Category]:
+    def list_categories(self, db: Session) -> list[Category]:
         return db.query(Category).all()
 
 product_repository = ProductRepository()

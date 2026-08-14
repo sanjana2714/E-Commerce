@@ -1,11 +1,10 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.db.models.outbox import OutboxEvent, OutboxStatus
-from app.db.models.idempotency import ProcessedEvent
 from app.api.dependencies import require_role
-from app.db.models.user import UserRole, User
+from app.db.models.idempotency import ProcessedEvent
+from app.db.models.outbox import OutboxEvent, OutboxStatus
+from app.db.models.user import User, UserRole
+from app.db.session import get_db
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/admin", tags=["Admin & DLQ"])
 
@@ -35,7 +34,7 @@ def list_dead_letter_events(
 
 @router.get("/outbox-events")
 def list_outbox_events(
-    status_filter: Optional[str] = Query(None, alias="status"),
+    status_filter: str | None = Query(None, alias="status"),
     db: Session = Depends(get_db),
     admin: User = Depends(require_role([UserRole.ADMIN]))
 ):

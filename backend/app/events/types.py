@@ -1,5 +1,6 @@
 import enum
 
+
 class KafkaTopic(str, enum.Enum):
     PRODUCT_EVENTS = "product-events"
     ORDER_EVENTS = "order-events"

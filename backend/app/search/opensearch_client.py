@@ -1,15 +1,20 @@
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 try:
     from opensearchpy import OpenSearch
+    from opensearchpy.exceptions import OpenSearchException
 except ImportError:
     OpenSearch = None
+    class OpenSearchException(Exception):
+        pass
 
 from app.core.config import settings
 from app.core.logging import logger
 
+
 class OpenSearchManager:
     def __init__(self):
-        self.client: Optional[Any] = None
+        self.client: Any | None = None
 
     def connect(self):
         if not OpenSearch:
@@ -33,7 +38,7 @@ class OpenSearchManager:
             else:
                 logger.warning("OpenSearch ping failed. Search service running in fallback mode.")
                 self.client = None
-        except Exception:
+        except OpenSearchException:
             logger.warning(f"OpenSearch unavailable at {settings.OPENSEARCH_URL}. Running in fallback mode.")
             self.client = None
 
@@ -96,18 +101,18 @@ class OpenSearchManager:
                 self.client.indices.create(index=index_name, body=mapping)
                 logger.info(f"Created OpenSearch index '{index_name}' with autocomplete mapping.")
             return True
-        except Exception as e:
+        except OpenSearchException as e:
             logger.error(f"Error creating OpenSearch index {index_name}: {e}")
             return False
 
-    def index_product(self, product_dict: Dict[str, Any], index_name: str = settings.OPENSEARCH_INDEX_PRODUCTS) -> bool:
+    def index_product(self, product_dict: dict[str, Any], index_name: str = settings.OPENSEARCH_INDEX_PRODUCTS) -> bool:
         if not self.client:
             return False
         try:
             doc_id = str(product_dict["id"])
             self.client.index(index=index_name, body=product_dict, id=doc_id, refresh=True)
             return True
-        except Exception as e:
+        except OpenSearchException as e:
             logger.error(f"Error indexing product {product_dict.get('id')}: {e}")
             return False
 
@@ -117,11 +122,11 @@ class OpenSearchManager:
         try:
             self.client.delete(index=index_name, id=str(product_id), ignore=[404], refresh=True)
             return True
-        except Exception as e:
+        except OpenSearchException as e:
             logger.error(f"Error deleting product document {product_id}: {e}")
             return False
 
-    def bulk_index_products(self, products_list: List[Dict[str, Any]], index_name: str = settings.OPENSEARCH_INDEX_PRODUCTS) -> int:
+    def bulk_index_products(self, products_list: list[dict[str, Any]], index_name: str = settings.OPENSEARCH_INDEX_PRODUCTS) -> int:
         if not self.client or not products_list:
             return 0
         
@@ -135,23 +140,23 @@ class OpenSearchManager:
             indexed_count = len([item for item in response.get("items", []) if "index" in item and item["index"].get("status") in (200, 201)])
             logger.info(f"Bulk indexed {indexed_count}/{len(products_list)} items into OpenSearch.")
             return indexed_count
-        except Exception as e:
+        except OpenSearchException as e:
             logger.error(f"Bulk indexing error: {e}")
             return 0
 
     def search_products(
         self,
-        query_text: Optional[str] = None,
-        category_id: Optional[int] = None,
-        brand: Optional[str] = None,
-        min_price: Optional[float] = None,
-        max_price: Optional[float] = None,
-        min_rating: Optional[float] = None,
+        query_text: str | None = None,
+        category_id: int | None = None,
+        brand: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        min_rating: float | None = None,
         sort_by: str = "relevance",
         page: int = 1,
         size: int = 20,
         index_name: str = settings.OPENSEARCH_INDEX_PRODUCTS
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not self.client:
             return {"total": 0, "hits": []}
 
@@ -215,7 +220,7 @@ class OpenSearchManager:
             total = res["hits"]["total"]["value"]
             hits = [item["_source"] for item in res["hits"]["hits"]]
             return {"total": total, "hits": hits}
-        except Exception as e:
+        except OpenSearchException as e:
             logger.error(f"OpenSearch query failed: {e}")
             return {"total": 0, "hits": []}
 

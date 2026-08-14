@@ -1,13 +1,14 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr, ConfigDict
+
 from app.db.models.user import UserRole
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 
 class UserRegister(BaseModel):
     email: EmailStr
     full_name: str
     password: str
-    role: Optional[UserRole] = UserRole.CUSTOMER
+    role: UserRole | None = UserRole.CUSTOMER
 
 class UserLogin(BaseModel):
     email: EmailStr

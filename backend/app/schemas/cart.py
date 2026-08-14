@@ -1,6 +1,7 @@
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+
 from app.schemas.product import ProductResponse
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class CartItemAdd(BaseModel):
     product_id: int
@@ -14,7 +15,7 @@ class CartItemResponse(BaseModel):
     product_id: int
     quantity: int
     unit_price: float
-    product: Optional[ProductResponse] = None
+    product: ProductResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -22,6 +23,6 @@ class CartResponse(BaseModel):
     id: int
     user_id: int
     total_amount: float
-    items: List[CartItemResponse]
+    items: list[CartItemResponse]
 
     model_config = ConfigDict(from_attributes=True)

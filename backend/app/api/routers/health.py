@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, Response, status
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 try:
-    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Counter
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
     HTTP_REQUEST_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"])
 except ImportError:
     generate_latest = lambda: b""
     CONTENT_TYPE_LATEST = "text/plain"
 
-from app.db.session import get_db
 from app.cache.redis_client import redis_client
-from app.search.opensearch_client import opensearch_manager
+from app.db.session import get_db
 from app.events.publisher import kafka_publisher
+from app.search.opensearch_client import opensearch_manager
 
 router = APIRouter(tags=["Health & Metrics"])
 
@@ -37,21 +37,21 @@ def readiness_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         dependencies["postgres"] = True
-    except Exception:
+    except Exception:  # noqa: BLE001
         dependencies["postgres"] = False
 
     # 2. Check Redis
     if redis_client.redis:
         try:
             dependencies["redis"] = True
-        except Exception:
+        except Exception:  # noqa: BLE001
             dependencies["redis"] = False
 
     # 3. Check OpenSearch
     if opensearch_manager.client:
         try:
             dependencies["opensearch"] = opensearch_manager.client.ping()
-        except Exception:
+        except Exception:  # noqa: BLE001
             dependencies["opensearch"] = False
 
     # 4. Check Kafka

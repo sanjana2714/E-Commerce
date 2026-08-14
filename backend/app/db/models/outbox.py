@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
 import enum
-from sqlalchemy import String, Text, JSON, Integer, DateTime, Enum
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import UTC, datetime
+
 from app.db.base import Base
+from sqlalchemy import JSON, DateTime, Enum, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
 
 class OutboxStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -20,7 +22,7 @@ class OutboxEvent(Base):
     event_type: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     status: Mapped[OutboxStatus] = mapped_column(Enum(OutboxStatus), default=OutboxStatus.PENDING, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     error_message: Mapped[str] = mapped_column(Text, nullable=True)

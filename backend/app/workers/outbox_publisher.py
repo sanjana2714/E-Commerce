@@ -1,13 +1,13 @@
 import time
-import json
-from datetime import datetime, timezone
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from datetime import UTC, datetime
+
 from app.core.config import settings
+from app.core.logging import logger
 from app.db.models.outbox import OutboxEvent, OutboxStatus
 from app.events.publisher import kafka_publisher
 from app.events.types import KafkaTopic
-from app.core.logging import logger
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
@@ -48,7 +48,7 @@ def publish_pending_outbox_events():
 
                 if success:
                     event.status = OutboxStatus.PUBLISHED
-                    event.published_at = datetime.now(timezone.utc)
+                    event.published_at = datetime.now(UTC)
                 else:
                     event.retry_count += 1
                     event.error_message = f"Failed to publish to topic {topic}"
@@ -59,7 +59,7 @@ def publish_pending_outbox_events():
                         event.status = OutboxStatus.FAILED
 
             db.commit()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             db.rollback()
             logger.error(f"Outbox publisher loop error: {e}")
         finally:

@@ -1,23 +1,25 @@
-from typing import Optional, Dict, Any, List
-from sqlalchemy.orm import Session
-from app.search.opensearch_client import opensearch_manager
-from app.db.models.product import Product, ProductStatus
+from typing import Any
+
 from app.cache.redis_client import cache_service
+from app.db.models.product import Product, ProductStatus
+from app.search.opensearch_client import opensearch_manager
+from sqlalchemy.orm import Session
+
 
 class SearchService:
     async def search_products(
         self,
         db: Session,
-        query: Optional[str] = None,
-        category_id: Optional[int] = None,
-        brand: Optional[str] = None,
-        min_price: Optional[float] = None,
-        max_price: Optional[float] = None,
-        min_rating: Optional[float] = None,
+        query: str | None = None,
+        category_id: int | None = None,
+        brand: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        min_rating: float | None = None,
         sort_by: str = "relevance",
         page: int = 1,
         size: int = 20,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         cache_key = f"search:q={query}:cat={category_id}:brand={brand}:min_p={min_price}:max_p={max_price}:sort={sort_by}:p={page}:s={size}"
         cached_result = await cache_service.get_json(cache_key)
         if cached_result:

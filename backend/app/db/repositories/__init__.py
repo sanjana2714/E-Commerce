@@ -1,18 +1,18 @@
-from app.db.repositories.user_repository import user_repository, UserRepository
-from app.db.repositories.product_repository import product_repository, ProductRepository
-from app.db.repositories.order_repository import order_repository, OrderRepository
-from app.db.repositories.inventory_repository import inventory_repository, InventoryRepository
-from app.db.repositories.outbox_repository import outbox_repository, OutboxRepository
+from app.db.repositories.inventory_repository import InventoryRepository, inventory_repository
+from app.db.repositories.order_repository import OrderRepository, order_repository
+from app.db.repositories.outbox_repository import OutboxRepository, outbox_repository
+from app.db.repositories.product_repository import ProductRepository, product_repository
+from app.db.repositories.user_repository import UserRepository, user_repository
 
 __all__ = [
-    "user_repository",
-    "UserRepository",
-    "product_repository",
-    "ProductRepository",
-    "order_repository",
-    "OrderRepository",
-    "inventory_repository",
     "InventoryRepository",
-    "outbox_repository",
+    "OrderRepository",
     "OutboxRepository",
+    "ProductRepository",
+    "UserRepository",
+    "inventory_repository",
+    "order_repository",
+    "outbox_repository",
+    "product_repository",
+    "user_repository",
 ]

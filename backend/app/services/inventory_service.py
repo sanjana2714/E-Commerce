@@ -1,9 +1,9 @@
-from typing import Optional
 import threading
-from sqlalchemy.orm import Session
-from app.db.models.inventory import Inventory
+
 from app.core.exceptions import InsufficientInventoryError, ResourceNotFoundError
 from app.core.logging import logger
+from app.db.models.inventory import Inventory
+from sqlalchemy.orm import Session
 
 _sqlite_lock = threading.Lock()
 
@@ -54,7 +54,7 @@ class InventoryService:
             if is_sqlite:
                 _sqlite_lock.release()
 
-    def release_inventory(self, db: Session, product_id: int, quantity: int) -> Optional[Inventory]:
+    def release_inventory(self, db: Session, product_id: int, quantity: int) -> Inventory | None:
         """Releases reserved stock back to active stock_quantity upon order cancellation or payment failure."""
         inventory = (
             db.query(Inventory)

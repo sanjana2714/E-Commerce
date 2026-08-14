@@ -1,5 +1,6 @@
 import heapq
-from typing import List, Dict, Any, Tuple
+from typing import Any
+
 
 class TopKHeap:
     """
@@ -14,13 +15,13 @@ class TopKHeap:
     """
     
     @staticmethod
-    def get_top_k_products(items: List[Dict[str, Any]], k: int = 10, metric_key: str = "sales_count") -> List[Dict[str, Any]]:
+    def get_top_k_products(items: list[dict[str, Any]], k: int = 10, metric_key: str = "sales_count") -> list[dict[str, Any]]:
         if k <= 0 or not items:
             return []
         
         # Min-heap stores tuples: (metric_value, item_dict)
         # Using item index or ID as tie-breaker to prevent dictionary comparisons
-        min_heap: List[Tuple[float, int, Dict[str, Any]]] = []
+        min_heap: list[tuple[float, int, dict[str, Any]]] = []
         
         for idx, item in enumerate(items):
             val = float(item.get(metric_key, 0))
