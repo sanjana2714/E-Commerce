@@ -1,0 +1,46 @@
+[project]
+name = "ecommerce-search-platform"
+version = "0.1.0"
+description = "Scalable E-Commerce Order & Product Search Platform"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "sqlalchemy>=2.0.28",
+    "alembic>=1.13.1",
+    "psycopg2-binary>=2.9.9",
+    "asyncpg>=0.29.0",
+    "redis>=5.0.3",
+    "opensearch-py>=2.4.0",
+    "kafka-python-ng>=2.2.2",
+    "aiokafka>=0.10.0",
+    "passlib[bcrypt]>=1.7.4",
+    "pyjwt>=2.8.0",
+    "python-multipart>=0.0.9",
+    "prometheus-client>=0.20.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "backend/tests",
+]
+pythonpath = [
+    "backend"
+]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.black]
+line-length = 100
+
+[tool.pyright]
+extraPaths = ["backend"]
+
